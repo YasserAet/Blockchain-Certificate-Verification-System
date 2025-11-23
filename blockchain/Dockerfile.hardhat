@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies for Hardhat
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy Hardhat configuration and contracts
+COPY . .
+
+# Expose Hardhat network port
+EXPOSE 8545
+
+# Default command (can be overridden in docker-compose)
+CMD ["npx", "hardhat", "node", "--hostname", "0.0.0.0"]

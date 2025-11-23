@@ -1,0 +1,74 @@
+# Docker Compose - Infrastructure Only
+# Use this to run just PostgreSQL and Redis without building the app containers
+# Run apps locally for faster development
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: credential_chain_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: credential_user
+      POSTGRES_PASSWORD: credential_password
+      POSTGRES_DB: credential_chain
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U credential_user -d credential_chain"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: credential_chain_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Hardhat Network (Local Blockchain) - Optional
+  # Uncomment if you want local blockchain
+  # hardhat:
+  #   build:
+  #     context: ./blockchain
+  #     dockerfile: Dockerfile.hardhat
+  #   container_name: credential_chain_hardhat
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8545:8545"
+  #   volumes:
+  #     - ./blockchain:/app
+  #     - /app/node_modules
+  #   command: npx hardhat node --hostname 0.0.0.0
+
+  # Adminer (Database Management UI) - Optional
+  # Uncomment if you want database UI
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: credential_chain_adminer
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8080"
+  #   environment:
+  #     ADMINER_DEFAULT_SERVER: postgres
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
