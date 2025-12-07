@@ -57,6 +57,7 @@ class MLPipeline:
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         print(f"[+] RMSE: {rmse:.4f}")
         joblib.dump(model, self.models_dir / "regressor.pkl")
+        joblib.dump(scaler, self.models_dir / "regressor_scaler.pkl")
         self.results["regressor"] = {"rmse": float(rmse)}
     
     def save_results(self):
