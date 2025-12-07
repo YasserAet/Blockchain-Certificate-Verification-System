@@ -151,8 +151,8 @@ def main():
                                 ocr_features.append(img_array)
                                 label = os.path.basename(root)
                                 ocr_labels.append(label)
-                        except:
-                            pass
+                        except Exception as e:
+                            print(f"    Error processing image {img_path}: {e}")
                     if len(ocr_features) >= 200:
                         break
                 if len(ocr_features) >= 200:
