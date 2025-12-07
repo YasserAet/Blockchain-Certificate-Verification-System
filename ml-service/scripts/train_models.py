@@ -42,6 +42,7 @@ class MLPipeline:
         acc = accuracy_score(y_test, y_pred)
         print(f"[+] Accuracy: {acc:.4f}")
         joblib.dump(model, self.models_dir / "classifier.pkl")
+        joblib.dump(scaler, self.models_dir / "classifier_scaler.pkl")
         self.results["classifier"] = {"accuracy": float(acc)}
     
     def train_regressor(self, X, y):
