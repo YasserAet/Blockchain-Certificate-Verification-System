@@ -13,10 +13,22 @@ import joblib
 
 
 class OCRDataPreparation:
-    def __init__(self, data_dir="Datasets/standard OCR dataset", output_dir="training_data"):
-        self.data_dir = Path(data_dir)
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
+    def __init__(self, data_dir=None, output_dir=None):
+        # Make paths repo-root relative so script can be run from any CWD.
+        # repo root is two parents above this script (ml-service/scripts -> repo root)
+        repo_root = Path(__file__).resolve().parents[2]
+        if data_dir is None:
+            self.data_dir = repo_root / "Datasets" / "standard OCR dataset"
+        else:
+            self.data_dir = Path(data_dir)
+
+        if output_dir is None:
+            # place outputs under ml-service/training_data by default
+            self.output_dir = Path(__file__).resolve().parents[1] / "training_data"
+        else:
+            self.output_dir = Path(output_dir)
+
+        self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def extract_image_features(self, image_path):
         """Extract features from a single image"""

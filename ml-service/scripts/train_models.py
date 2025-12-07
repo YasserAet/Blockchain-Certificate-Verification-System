@@ -42,6 +42,7 @@ class MLPipeline:
         acc = accuracy_score(y_test, y_pred)
         print(f"[+] Accuracy: {acc:.4f}")
         joblib.dump(model, self.models_dir / "classifier.pkl")
+        joblib.dump(scaler, self.models_dir / "classifier_scaler.pkl")
         self.results["classifier"] = {"accuracy": float(acc)}
     
     def train_regressor(self, X, y):
@@ -56,6 +57,7 @@ class MLPipeline:
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         print(f"[+] RMSE: {rmse:.4f}")
         joblib.dump(model, self.models_dir / "regressor.pkl")
+        joblib.dump(scaler, self.models_dir / "regressor_scaler.pkl")
         self.results["regressor"] = {"rmse": float(rmse)}
     
     def save_results(self):
@@ -149,8 +151,8 @@ def main():
                                 ocr_features.append(img_array)
                                 label = os.path.basename(root)
                                 ocr_labels.append(label)
-                        except:
-                            pass
+                        except Exception as e:
+                            print(f"    Error processing image {img_path}: {e}")
                     if len(ocr_features) >= 200:
                         break
                 if len(ocr_features) >= 200:
