@@ -56,8 +56,7 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-primary-lighter border-r border-border hidden md:flex flex-col">
       <div className="p-6 border-b border-border">
-        <h1 className="text-xl font-bold text-accent">CredChain</h1>
-        <p className="text-xs text-muted mt-1">Blockchain Credentials</p>
+        <h1 className="text-xl font-bold text-accent">CertChain</h1>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

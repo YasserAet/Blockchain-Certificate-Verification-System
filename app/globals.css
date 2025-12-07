@@ -1,125 +1,63 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
-
-  /* Primary Brand Colors */
-  --color-primary: #0f172a;
-  --color-primary-lighter: #1e293b;
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 160 84% 39%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 160 84% 39%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 160 84% 39%;
+    
+    --radius: 0.5rem;
+  }
   
-  /* Accent Colors */
-  --color-accent: #10b981;
-  --color-accent-light: #6ee7b7;
-  --color-danger: #ef4444;
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .glass-effect {
+    background-color: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border));
+  }
   
-  /* Neutrals */
-  --color-background: #0a0f1a;
-  --color-foreground: #f1f5f9;
-  --color-border: #334155;
-  --color-muted: #64748b;
-}
-
-* {
-  @apply border-border;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  @apply bg-background text-foreground;
-}
-
-/* Semantic tokens */
-:root {
-  --background: 0 0% 4%;
-  --foreground: 0 0% 95%;
-  
-  --card: 210 20% 10%;
-  --card-foreground: 0 0% 95%;
-  
-  --primary: 160 84% 39%;
-  --primary-foreground: 0 0% 4%;
-  
-  --secondary: 210 20% 20%;
-  --secondary-foreground: 0 0% 95%;
-  
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 4%;
-  
-  --muted: 210 10% 40%;
-  --muted-foreground: 0 0% 80%;
-  
-  --accent: 160 84% 39%;
-  --accent-foreground: 0 0% 4%;
-  
-  --border: 210 20% 20%;
-  --input: 210 20% 15%;
-  --ring: 160 84% 39%;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: 0 0% 4%;
-  --foreground: 0 0% 95%;
-  --card: 210 20% 10%;
-  --card-foreground: 0 0% 95%;
-  --primary: 160 84% 39%;
-  --primary-foreground: 0 0% 4%;
-  --secondary: 210 20% 20%;
-  --secondary-foreground: 0 0% 95%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 4%;
-  --muted: 210 10% 40%;
-  --muted-foreground: 0 0% 80%;
-  --accent: 160 84% 39%;
-  --accent-foreground: 0 0% 4%;
-  --border: 210 20% 20%;
-  --input: 210 20% 15%;
-  --ring: 160 84% 39%;
-}
-
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  @apply font-semibold;
-}
-
-h1 {
-  @apply text-4xl;
-}
-
-h2 {
-  @apply text-3xl;
-}
-
-h3 {
-  @apply text-2xl;
-}
-
-/* Utility classes */
-.glass-effect {
-  @apply bg-card/50 backdrop-blur-md border border-border;
-}
-
-.transition-smooth {
-  @apply transition-all duration-300 ease-in-out;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  @apply w-2 h-2;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-background;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-muted rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted/80;
+  .transition-smooth {
+    transition: all 300ms ease-in-out;
+  }
 }

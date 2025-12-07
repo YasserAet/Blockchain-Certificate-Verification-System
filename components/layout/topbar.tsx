@@ -50,7 +50,7 @@ export function TopBar() {
   return (
     <header className="bg-primary-lighter border-b border-border md:hidden sticky top-0 z-50">
       <div className="flex items-center justify-between p-4">
-        <h1 className="text-lg font-bold text-accent">CredChain</h1>
+        <h1 className="text-lg font-bold text-accent">CertChain</h1>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="text-foreground"
