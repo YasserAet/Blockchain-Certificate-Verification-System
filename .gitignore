@@ -1,3 +1,9 @@
+# API Keys and secrets
+kaggle.json
+.env
+.env.local
+.env.*
+
 # Node modules
 node_modules/
 
@@ -14,6 +20,10 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Virtual environments
+**/venv/
+**/.venv/
 
 # Coverage directory
 coverage/
@@ -70,3 +80,6 @@ start_services.sh
 
 # Ignore PDF and other docs
 Système de certification des compétences par Blockchain.pdf
+
+# Datasets folder
+Datasets/
