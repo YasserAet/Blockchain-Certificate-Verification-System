@@ -19,7 +19,7 @@ def load_models():
     try:
         classifier = joblib.load(models_dir / "random_forest_classifier.pkl")
         regressor = joblib.load(models_dir / "regressor.pkl")
-        scaler = joblib.load(models_dir / "random_forest_scaler.pkl")
+        scaler = joblib.load(models_dir / "classifier_scaler.pkl")
         print("✅ Models loaded successfully!")
         return classifier, regressor, scaler
     except FileNotFoundError as e:
