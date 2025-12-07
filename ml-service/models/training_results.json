@@ -1,62 +1,17 @@
 {
-  "random_forest_classifier": {
-    "accuracy": 1.0,
+  "coursera_regressor": {
+    "rmse": 0.15233111958251952,
+    "mae": 0.11851703219376661,
+    "r2": -0.46088740392613503
+  },
+  "ocr_classifier": {
+    "accuracy": 0.32,
+    "samples": 500
+  },
+  "fraud_classifier": {
+    "accuracy": 0.99,
     "precision": 1.0,
-    "recall": 1.0,
-    "f1_score": 1.0,
-    "roc_auc": 1.0,
-    "confusion_matrix": [
-      [
-        174,
-        0
-      ],
-      [
-        0,
-        26
-      ]
-    ],
-    "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00       174\n           1       1.00      1.00      1.00        26\n\n    accuracy                           1.00       200\n   macro avg       1.00      1.00      1.00       200\nweighted avg       1.00      1.00      1.00       200\n",
-    "feature_importance": [
-      {
-        "feature": "feature_2",
-        "importance": 0.292945952837258
-      },
-      {
-        "feature": "feature_0",
-        "importance": 0.29029485179303677
-      },
-      {
-        "feature": "feature_1",
-        "importance": 0.27625222985388703
-      },
-      {
-        "feature": "feature_3",
-        "importance": 0.02359515115523698
-      },
-      {
-        "feature": "feature_7",
-        "importance": 0.023536018213484323
-      },
-      {
-        "feature": "feature_9",
-        "importance": 0.019917110848834713
-      },
-      {
-        "feature": "feature_4",
-        "importance": 0.01974581969477686
-      },
-      {
-        "feature": "feature_8",
-        "importance": 0.019185021985906867
-      },
-      {
-        "feature": "feature_6",
-        "importance": 0.017805670863556448
-      },
-      {
-        "feature": "feature_5",
-        "importance": 0.01672217275402192
-      }
-    ]
+    "recall": 0.9230769230769231,
+    "f1_score": 0.96
   }
 }

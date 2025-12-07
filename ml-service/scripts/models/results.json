@@ -1,0 +1,8 @@
+{
+  "regressor": {
+    "rmse": 0.15874880361974297
+  },
+  "classifier": {
+    "accuracy": 1.0
+  }
+}
