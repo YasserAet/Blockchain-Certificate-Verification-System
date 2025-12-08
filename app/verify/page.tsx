@@ -7,18 +7,28 @@ import { Shield, Search, FileCheck, AlertCircle, CheckCircle, XCircle, Clock, Us
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 
 interface VerificationResult {
-  valid: boolean
-  certificateId: string
-  studentName: string
-  institution: string
-  degree: string
-  issueDate: string
-  verificationDate: string
-  blockchainHash: string
-  fraudScore: number
-  status: 'verified' | 'invalid' | 'suspicious'
+  certificate: {
+    id: number
+    title: string
+    recipient_name: string
+    recipient_email: string
+    institution_name: string
+    issue_date: string
+    expiry_date: string | null
+    status: string
+    fraud_score: number | null
+    description: string | null
+  }
+  blockchain: {
+    isVerified: boolean
+    txHash: string | null
+    blockNumber: number | null
+  }
+  isValid: boolean
+  message: string
 }
 
 const verificationSteps = [
@@ -45,7 +55,8 @@ const verificationSteps = [
 ]
 
 export default function VerifyPage() {
-  const [certificateId, setCertificateId] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchType, setSearchType] = useState<'id' | 'hash'>('id')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<VerificationResult | null>(null)
   const [error, setError] = useState('')
@@ -57,26 +68,26 @@ export default function VerifyPage() {
     setResult(null)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+      const endpoint = searchType === 'id' 
+        ? `${API_URL}/certificates/${searchQuery}/verify`
+        : `${API_URL}/certificates/verify-by-hash/${searchQuery}`
 
-      // Mock result - replace with actual API call
-      const mockResult: VerificationResult = {
-        valid: true,
-        certificateId: certificateId,
-        studentName: 'John Doe',
-        institution: 'MIT - Massachusetts Institute of Technology',
-        degree: 'Bachelor of Science in Computer Science',
-        issueDate: '2024-06-15',
-        verificationDate: new Date().toISOString().split('T')[0],
-        blockchainHash: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-        fraudScore: 0.02,
-        status: 'verified'
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Certificate not found or verification failed')
       }
 
-      setResult(mockResult)
-    } catch (err) {
-      setError('Failed to verify certificate. Please try again.')
+      const data = await response.json()
+      setResult(data.data)
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify certificate. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -128,22 +139,38 @@ export default function VerifyPage() {
           <Card className="max-w-3xl mx-auto p-8 border-border/40 shadow-xl">
             <form onSubmit={handleVerify} className="space-y-6">
               <div>
+                <Label htmlFor="searchType">Search By</Label>
+                <select
+                  id="searchType"
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value as 'id' | 'hash')}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background mb-4"
+                >
+                  <option value="id">Certificate ID</option>
+                  <option value="hash">Blockchain Hash</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-2">
-                  Certificate ID or Blockchain Hash
+                  {searchType === 'id' ? 'Certificate ID' : 'Blockchain Transaction Hash'}
                 </label>
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
-                    value={certificateId}
-                    onChange={(e) => setCertificateId(e.target.value)}
-                    placeholder="Enter certificate ID or 0x hash..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={searchType === 'id' ? 'Enter certificate ID (e.g., 1)' : 'Enter blockchain hash (0x...)'}
                     required
                     className="pl-10 h-12 text-lg"
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Example: CERT-2024-12345 or 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+                  {searchType === 'id' 
+                    ? 'Enter the numeric certificate ID'
+                    : 'Enter the blockchain transaction hash starting with 0x'
+                  }
                 </p>
               </div>
 
@@ -182,20 +209,14 @@ export default function VerifyPage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Status Banner */}
             <div className={`p-6 rounded-2xl mb-8 border-2 ${
-              result.status === 'verified' 
+              result.isValid 
                 ? 'bg-green-500/10 border-green-500/30' 
-                : result.status === 'suspicious'
-                ? 'bg-yellow-500/10 border-yellow-500/30'
                 : 'bg-red-500/10 border-red-500/30'
             }`}>
               <div className="flex items-center gap-4">
-                {result.status === 'verified' ? (
+                {result.isValid ? (
                   <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
                     <CheckCircle className="w-8 h-8 text-green-500" />
-                  </div>
-                ) : result.status === 'suspicious' ? (
-                  <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                    <AlertCircle className="w-8 h-8 text-yellow-500" />
                   </div>
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -204,17 +225,28 @@ export default function VerifyPage() {
                 )}
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold mb-1">
-                    {result.status === 'verified' ? 'Certificate Verified ✓' : 
-                     result.status === 'suspicious' ? 'Suspicious Activity Detected' :
-                     'Invalid Certificate'}
+                    {result.isValid ? 'Certificate Verified ✓' : 'Invalid Certificate'}
                   </h2>
                   <p className="text-muted-foreground">
-                    {result.status === 'verified' ? 'This certificate is authentic and verified on the blockchain' :
-                     result.status === 'suspicious' ? 'This certificate may be fraudulent. Please contact the institution' :
-                     'This certificate could not be verified in our system'}
+                    {result.message}
                   </p>
                 </div>
               </div>
+
+              {/* Fraud Score Warning */}
+              {result.certificate.fraud_score !== null && Number(result.certificate.fraud_score) > 70 && (
+                <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    <span className="text-yellow-500 font-semibold">
+                      High Fraud Risk Detected: {Number(result.certificate.fraud_score).toFixed(1)}%
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    This certificate has been flagged by our AI fraud detection system. Please verify directly with the institution.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Certificate Details */}
@@ -222,36 +254,67 @@ export default function VerifyPage() {
               <Card className="p-6 border-border/40">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <User className="w-5 h-5 text-accent" />
-                  Student Information
+                  Recipient Information
                 </h3>
                 <div className="space-y-3">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Full Name</div>
-                    <div className="font-medium">{result.studentName}</div>
+                    <div className="font-medium">{result.certificate.recipient_name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Degree</div>
-                    <div className="font-medium">{result.degree}</div>
+                    <div className="text-sm text-muted-foreground mb-1">Email</div>
+                    <div className="font-medium">{result.certificate.recipient_email}</div>
                   </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Certificate Title</div>
+                    <div className="font-medium">{result.certificate.title}</div>
+                  </div>
+                  {result.certificate.description && (
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Description</div>
+                      <div className="text-sm">{result.certificate.description}</div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
               <Card className="p-6 border-border/40">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-accent" />
-                  Institution
+                  Institution Details
                 </h3>
                 <div className="space-y-3">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Issuing Institution</div>
-                    <div className="font-medium">{result.institution}</div>
+                    <div className="font-medium">{result.certificate.institution_name}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Issue Date</div>
                     <div className="font-medium flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {new Date(result.issueDate).toLocaleDateString()}
+                      {new Date(result.certificate.issue_date).toLocaleDateString()}
                     </div>
+                  </div>
+                  {result.certificate.expiry_date && (
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Expiry Date</div>
+                      <div className="font-medium flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(result.certificate.expiry_date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Status</div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      result.certificate.status === 'verified'
+                        ? 'bg-green-500/10 text-green-500'
+                        : result.certificate.status === 'pending'
+                        ? 'bg-yellow-500/10 text-yellow-500'
+                        : 'bg-red-500/10 text-red-500'
+                    }`}>
+                      {result.certificate.status}
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -270,7 +333,7 @@ export default function VerifyPage() {
                     Certificate ID
                   </div>
                   <div className="font-mono text-sm bg-accent/10 p-2 rounded border border-accent/20">
-                    {result.certificateId}
+                    {result.certificate.id}
                   </div>
                 </div>
                 <div>
@@ -279,79 +342,90 @@ export default function VerifyPage() {
                     Blockchain Hash
                   </div>
                   <div className="font-mono text-sm bg-accent/10 p-2 rounded border border-accent/20 truncate">
-                    {result.blockchainHash}
+                    {result.blockchain.txHash || 'Pending'}
                   </div>
                 </div>
+                {result.blockchain.blockNumber && (
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Block Number
+                    </div>
+                    <div className="font-medium">
+                      #{result.blockchain.blockNumber}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Verified On
+                    <CheckCircle className="w-4 h-4" />
+                    Blockchain Status
                   </div>
-                  <div className="font-medium">
-                    {new Date(result.verificationDate).toLocaleDateString()}
-                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    result.blockchain.isVerified
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-yellow-500/10 text-yellow-500'
+                  }`}>
+                    {result.blockchain.isVerified ? 'Verified' : 'Pending'}
+                  </span>
                 </div>
               </div>
             </Card>
 
             {/* AI Fraud Detection */}
-            <Card className="p-6 border-border/40">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-accent" />
-                AI Fraud Detection Analysis
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Fraud Risk Score</span>
-                    <span className="font-bold text-green-500">{(result.fraudScore * 100).toFixed(1)}%</span>
+            {result.certificate.fraud_score !== null && (
+              <Card className="p-6 border-border/40 mb-8">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-accent" />
+                  AI Fraud Detection Analysis
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">Fraud Risk Score</span>
+                      <span className={`font-bold ${
+                        Number(result.certificate.fraud_score) > 70 ? 'text-red-500' : 
+                        Number(result.certificate.fraud_score) > 40 ? 'text-yellow-500' : 
+                        'text-green-500'
+                      }`}>
+                        {Number(result.certificate.fraud_score).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          Number(result.certificate.fraud_score) > 70 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                          Number(result.certificate.fraud_score) > 40 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                          'bg-gradient-to-r from-green-500 to-emerald-500'
+                        }`}
+                        style={{ width: `${Number(result.certificate.fraud_score)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
-                      style={{ width: `${100 - (result.fraudScore * 100)}%` }}
-                    />
+                  <div className="text-sm text-muted-foreground">
+                    {Number(result.certificate.fraud_score) < 30 ? (
+                      '✓ Low fraud risk - Certificate appears authentic'
+                    ) : Number(result.certificate.fraud_score) < 70 ? (
+                      '⚠ Moderate fraud risk - Review recommended'
+                    ) : (
+                      '⚠ High fraud risk - Contact institution for verification'
+                    )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Pattern Match', value: '98.5%', icon: CheckCircle },
-                    { label: 'Signature Valid', value: '100%', icon: CheckCircle },
-                    { label: 'Timestamp Valid', value: '100%', icon: CheckCircle },
-                    { label: 'Issuer Verified', value: '100%', icon: CheckCircle }
-                  ].map((check, index) => {
-                    const Icon = check.icon
-                    return (
-                      <div key={index} className="text-center p-3 rounded-lg bg-accent/5 border border-accent/10">
-                        <Icon className="w-5 h-5 text-green-500 mx-auto mb-2" />
-                        <div className="text-xs text-muted-foreground mb-1">{check.label}</div>
-                        <div className="font-semibold text-sm">{check.value}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Actions */}
             <div className="flex flex-wrap gap-4 justify-center mt-8">
-              <Button variant="outline" className="gap-2">
-                <FileCheck className="w-4 h-4" />
-                Download Report
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <Award className="w-4 h-4" />
-                View on Blockchain
-              </Button>
               <Button 
                 onClick={() => {
                   setResult(null)
-                  setCertificateId('')
+                  setSearchQuery('')
                 }}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+                className="gap-2"
               >
                 <Search className="w-4 h-4" />
-                Verify Another
+                Verify Another Certificate
               </Button>
             </div>
           </div>

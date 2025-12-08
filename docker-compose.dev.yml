@@ -1,0 +1,50 @@
+# Development Docker Compose Override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      target: deps  # Only build dependencies for faster dev
+    command: npm run dev
+    volumes:
+      - ./app:/app/app:cached
+      - ./components:/app/components:cached
+      - ./lib:/app/lib:cached
+      - ./public:/app/public:cached
+      - ./.env.local:/app/.env.local:ro
+      - /app/node_modules  # Prevent overwriting
+      - /app/.next
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: dev_password_123  # Different password for dev
+
+  # pgAdmin for database management (dev only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: bcvs-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@bcvs.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - bcvs-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  pgadmin_data:
+    name: bcvs-pgadmin-data

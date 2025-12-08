@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,22 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    // Redirect if already logged in
+    const token = localStorage.getItem('token')
+    const userData = localStorage.getItem('user')
+    if (token && userData) {
+      const user = JSON.parse(userData)
+      const redirects: Record<string, string> = {
+        student: '/student/dashboard',
+        institution: '/institution/dashboard',
+        employer: '/employer/dashboard',
+        admin: '/admin/dashboard',
+      }
+      router.push(redirects[user.role] || '/')
+    }
+  }, [router])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -28,15 +44,19 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      const result = await response.json()
 
       if (!response.ok) {
-        setError(data.message || 'Login failed')
+        setError(result.message || 'Login failed')
         return
       }
 
+      // Backend returns { success, message, data: { user, token } }
+      const { data } = result
+      
       // Store token and redirect based on role
       localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('role', data.user.role)
       
       const redirects: Record<string, string> = {
@@ -47,8 +67,9 @@ export default function LoginPage() {
       }
 
       router.push(redirects[data.user.role] || '/student/dashboard')
-    } catch (err) {
-      setError('An error occurred. Please try again.')
+    } catch (err: any) {
+      console.error('Login error:', err)
+      setError(err.message || 'An error occurred. Please try again.')
     } finally {
       setLoading(false)
     }

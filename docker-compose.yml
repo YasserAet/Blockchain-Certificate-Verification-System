@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bcvs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bcvs
+      POSTGRES_USER: bcvs_user
+      POSTGRES_PASSWORD: bcvs_password_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./database/migrations:/docker-entrypoint-initdb.d  # Uncomment when migrations exist
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bcvs_user -d bcvs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcvs-network
+
+  # Blockchain - Hardhat Node
+  blockchain:
+    build:
+      context: ./blockchain
+      dockerfile: Dockerfile
+    container_name: bcvs-blockchain
+    restart: unless-stopped
+    ports:
+      - "8545:8545"
+    networks:
+      - bcvs-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend - Express API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bcvs-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: bcvs
+      DATABASE_USER: bcvs_user
+      DATABASE_PASSWORD: bcvs_password_2024
+      JWT_SECRET: your-super-secret-jwt-key-min-32-characters-long-change-in-production
+      JWT_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:3000
+      BLOCKCHAIN_RPC_URL: https://eth-sepolia.g.alchemy.com/v2/S3Sz5tGlnEkwUGxNpXVpq
+      BLOCKCHAIN_PRIVATE_KEY: 0x9782da8afe3b1112c53901cf2b64a1663ae25d31e89bff32a9beda11e681ed9a
+      CERTIFICATE_REGISTRY_ADDRESS: 0x1AaC13CF6F17d0c1c61c9edE0FbC2317E920549F
+      FRAUD_DETECTION_STORE_ADDRESS: 0x6162eCF8C0A66b82c466852274dc19Cab324DBa3
+      SKILL_VALIDATOR_ADDRESS: 0xA04a6D63eFE3d1fbE27a5bA9D9f63a87d1f52DC3
+      ML_SERVICE_URL: http://ml-service:8000
+    volumes:
+      - ./backend/src:/app/src
+      - /app/node_modules
+      - certificate_uploads:/app/uploads/certificates
+    depends_on:
+      postgres:
+        condition: service_healthy
+      blockchain:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcvs-network
+
+  # Frontend - Next.js Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev  # Use dev Dockerfile (no build step)
+    container_name: bcvs-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # API Configuration (Client-side)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      NEXT_PUBLIC_API_TIMEOUT: ${NEXT_PUBLIC_API_TIMEOUT:-30000}
+      
+      # API Configuration (Server-side - for Next.js API routes)
+      BACKEND_API_URL: http://backend:3001/api
+      
+      # Blockchain Configuration
+      NEXT_PUBLIC_BLOCKCHAIN_NETWORK: ${NEXT_PUBLIC_BLOCKCHAIN_NETWORK:-localhost}
+      NEXT_PUBLIC_BLOCKCHAIN_RPC_URL: ${NEXT_PUBLIC_BLOCKCHAIN_RPC_URL:-http://blockchain:8545}
+      NEXT_PUBLIC_CHAIN_ID: ${NEXT_PUBLIC_CHAIN_ID:-31337}
+      
+      # Smart Contract Addresses
+      NEXT_PUBLIC_CERTIFICATE_REGISTRY_ADDRESS: ${NEXT_PUBLIC_CERTIFICATE_REGISTRY_ADDRESS}
+      NEXT_PUBLIC_FRAUD_DETECTION_STORE_ADDRESS: ${NEXT_PUBLIC_FRAUD_DETECTION_STORE_ADDRESS}
+      NEXT_PUBLIC_SKILL_VALIDATOR_ADDRESS: ${NEXT_PUBLIC_SKILL_VALIDATOR_ADDRESS}
+      
+      # App Configuration
+      NEXT_PUBLIC_APP_NAME: "Credential Chain"
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - bcvs-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ML Service - FastAPI
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: bcvs-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./ml-service/models:/app/models:ro
+      - ./ml-service/app.py:/app/app.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - bcvs-network
+
+networks:
+  bcvs-network:
+    driver: bridge
+    name: bcvs-network
+
+volumes:
+  postgres_data:
+    name: bcvs-postgres-data
+  certificate_uploads:
+    name: bcvs-certificate-uploads

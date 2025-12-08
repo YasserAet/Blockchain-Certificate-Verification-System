@@ -5,11 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+// Use server-side URL (internal Docker network or localhost for development)
+const BACKEND_URL = process.env.BACKEND_API_URL || 'http://backend:3001/api'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+
+    console.log('Registering user:', { email: body.email, role: body.role })
+    console.log('Backend URL:', BACKEND_URL)
 
     const response = await fetch(`${BACKEND_URL}/auth/register`, {
       method: 'POST',
@@ -22,12 +26,14 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
 
     if (!response.ok) {
+      console.error('Backend registration error:', data)
       return NextResponse.json(
         { message: data.message || 'Registration failed' },
         { status: response.status }
       )
     }
 
+    console.log('Registration successful')
     return NextResponse.json(data)
   } catch (error) {
     console.error('Register error:', error)
