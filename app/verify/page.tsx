@@ -239,7 +239,7 @@ export default function VerifyPage() {
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-yellow-500" />
                     <span className="text-yellow-500 font-semibold">
-                      High Fraud Risk Detected: {result.certificate.fraud_score.toFixed(1)}%
+                      High Fraud Risk Detected: {Number(result.certificate.fraud_score).toFixed(1)}%
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">

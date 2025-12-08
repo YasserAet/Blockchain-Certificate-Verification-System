@@ -44,10 +44,13 @@ export function Navigation() {
               <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               Features
             </Link>
-            <Link href="/verify" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
-              <CheckCircle2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-              Verify
-            </Link>
+            {/* Show Verify only for public users or employers */}
+            {(!user || user.role === 'employer') && (
+              <Link href="/verify" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
+                <CheckCircle2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                Verify
+              </Link>
+            )}
             <Link href="/about" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
               <Info className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               About
@@ -115,14 +118,17 @@ export function Navigation() {
               <Sparkles className="w-4 h-4" />
               Features
             </Link>
-            <Link 
-              href="/verify" 
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Verify
-            </Link>
+            {/* Show Verify only for public users or employers */}
+            {(!user || user.role === 'employer') && (
+              <Link 
+                href="/verify" 
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Verify
+              </Link>
+            )}
             <Link 
               href="/about" 
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"

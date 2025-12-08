@@ -16,14 +16,15 @@ export const CONTRACT_ADDRESSES = {
   skillValidator: process.env.SKILL_VALIDATOR_ADDRESS || '',
 };
 
-// Contract ABIs (simplified - will be replaced with actual ABIs after deployment)
+// Contract ABIs - matching deployed contracts
 export const CERTIFICATE_REGISTRY_ABI = [
-  'function issueCertificate(bytes32 certificateHash, address student, string memory metadataURI) external returns (bool)',
-  'function verifyCertificate(bytes32 certificateHash) external view returns (bool)',
-  'function revokeCertificate(bytes32 certificateHash) external returns (bool)',
-  'function getCertificate(bytes32 certificateHash) external view returns (address institution, address student, string memory metadataURI, uint256 issueDate, bool isValid, bool isRevoked)',
-  'event CertificateIssued(bytes32 indexed certificateHash, address indexed institution, address indexed student, uint256 timestamp)',
-  'event CertificateRevoked(bytes32 indexed certificateHash, uint256 timestamp)'
+  'function issueCertificate(string memory certificateId, address student, string memory dataHash, uint256 expiryDate) external',
+  'function verifyCertificate(string memory certificateId) external view returns (bool isValid, address student, address institution, string memory dataHash, uint256 issueDate, uint256 expiryDate, bool isRevoked)',
+  'function revokeCertificate(string memory certificateId) external',
+  'function authorizeInstitution(address institution) external',
+  'function authorizedInstitutions(address institution) external view returns (bool)',
+  'event CertificateIssued(string indexed certificateId, address indexed student, address indexed institution, uint256 issueDate)',
+  'event CertificateRevoked(string indexed certificateId, address indexed revokedBy, uint256 revokeDate)'
 ];
 
 export const FRAUD_DETECTION_ABI = [
@@ -88,3 +89,7 @@ export const checkBlockchainConnection = async () => {
     return false;
   }
 };
+
+// Export simplified getters for controllers
+export const getCertificateRegistry = () => getCertificateRegistryContract();
+export const getWallet = () => wallet;

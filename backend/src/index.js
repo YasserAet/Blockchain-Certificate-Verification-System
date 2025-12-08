@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import employerRoutes from './routes/employer.routes.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/employer', employerRoutes);
 
 // 404 handler
 app.use((_req, res) => {

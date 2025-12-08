@@ -102,8 +102,8 @@ export default function EmployerDashboard() {
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
       const endpoint = searchType === 'id' 
-        ? `${API_URL}/certificates/${searchQuery}/verify`
-        : `${API_URL}/certificates/verify-by-hash/${searchQuery}`
+        ? `${API_URL}/certificates/employer/${searchQuery}/verify`
+        : `${API_URL}/certificates/employer/verify-by-hash/${searchQuery}`
 
       const response = await fetch(endpoint, {
         method: 'POST',
